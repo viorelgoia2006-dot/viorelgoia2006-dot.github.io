@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ro"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827"><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
+<title>Orarul meu</title></head>
+<body><div class="app">
+<header><div><div class="eyebrow">AA · Anul 2 · Grupa 1</div><h1>Orarul meu</h1><div id="weekBadge"></div></div><button id="install" hidden>Instalează</button></header>
+<nav id="days"></nav><main id="content"></main>
+<footer>5 octombrie 2026 = săptămână impară · program offline</footer></div>
+<script src="schedule.js"></script><script>
+const names=["","Luni","Marți","Miercuri","Joi","Vineri","Sâmbătă","Duminică"];
+let selected=(new Date().getDay()||7); if(selected>5) selected=1;
+function render(){
+ const now=new Date(), wt=weekType(now);
+ document.getElementById("weekBadge").textContent="Săptămâna "+(wt==="odd"?"IMPARĂ":"PARĂ");
+ document.getElementById("days").innerHTML=[1,2,3,4,5].map(d=>`<button class="${d===selected?'active':''}" onclick="selected=${d};render()">${names[d]}</button>`).join("");
+ const items=schedule.filter(x=>x.day===selected&&visibleForWeek(x,now)).sort((a,b)=>minutes(a.start)-minutes(b.start));
+ const nowMin=now.getHours()*60+now.getMinutes();
+ document.getElementById("content").innerHTML=items.length?items.map(x=>{
+   const cur=selected===(now.getDay()||7)&&nowMin>=minutes(x.start)&&nowMin<minutes(x.end);
+   return `<article class="card ${cur?'current':''}"><div class="time">${x.start}–${x.end}</div><div class="body"><div class="tag">${x.type}${cur?' · ACUM':''}</div><h2>${x.name}</h2><p>📍 ${x.room}</p><p>👤 ${x.teacher}</p></div></article>`
+ }).join(""):`<div class="empty">Nu ai cursuri în această zi.</div>`;
+}
+render(); setInterval(render,30000);
+let deferred; window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;document.getElementById("install").hidden=false});
+document.getElementById("install").onclick=async()=>{if(deferred){deferred.prompt();deferred=null}};
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script></body></html>
